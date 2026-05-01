@@ -209,23 +209,38 @@ export class SmartLifeWebApi {
    * Convert SmartLife device format to Tuya format
    */
   private convertSmartLifeDevicesToTuya(devices: unknown[]): TuyaDevice[] {
+    this.log?.debug(`Converting ${devices.length} SmartLife devices to Tuya format`);
+    
     return devices
-      .map((device) => {
+      .map((device, index) => {
         const dev = device as Record<string, unknown>;
+        
+        // Log first device structure for debugging
+        if (index === 0 && this.log) {
+          this.log.debug(`First device structure: ${JSON.stringify(dev, null, 2)}`);
+        }
         
         // Extract data points
         const dps = (dev.dps as Record<string, unknown>) || {};
         const state = Object.keys(dps).length > 0 ? dps : undefined;
 
-        return {
+        const category = dev.category as string;
+        const devType = this.mapCategoryToDevType(category);
+        const haType = this.mapCategoryToHaType(category);
+
+        const tuyaDevice = {
           id: (dev.devId || dev.id) as string,
           name: (dev.name || "Unknown Device") as string,
-          dev_type: this.mapCategoryToDevType(dev.category as string),
-          ha_type: this.mapCategoryToHaType(dev.category as string),
+          dev_type: devType,
+          ha_type: haType,
           data: state || {},
           online: (dev.online ?? true) as boolean,
           icon: (dev.iconUrl || "") as string,
         } as TuyaDevice;
+
+        this.log?.debug(`Device "${tuyaDevice.name}" (${tuyaDevice.id}): category=${category}, dev_type=${devType}, ha_type=${haType}`);
+
+        return tuyaDevice;
       })
       .filter((device) => device.id);
   }

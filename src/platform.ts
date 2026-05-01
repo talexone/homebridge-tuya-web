@@ -210,6 +210,7 @@ export class TuyaWebPlatform implements DynamicPlatformPlugin {
 
   private addAccessory(device: TuyaDevice): void {
     const deviceType: TuyaDeviceType = device.dev_type ?? "switch";
+    this.log.debug(`addAccessory called for "${device.name}" with type: ${deviceType}`);
     const uuid = this.api.hap.uuid.generate(device.id);
     const homebridgeAccessory = this.accessories.get(uuid);
 
@@ -278,9 +279,11 @@ export class TuyaWebPlatform implements DynamicPlatformPlugin {
 
   async discoverDevices(): Promise<void> {
     let devices = (await this.tuyaWebApi.discoverDevices()) ?? [];
+    this.log.info(`Raw devices from API: ${devices.length}`);
 
     // Is device type overruled in config defaults?
     devices = this.applyConfigOverwrites(devices);
+    this.log.info(`After config overwrites: ${devices.length}`);
     devices.forEach((device) => {
       if (
         device.config?.old_dev_type &&
@@ -297,6 +300,8 @@ export class TuyaWebPlatform implements DynamicPlatformPlugin {
     });
 
     devices = this.filterDeviceList(devices);
+    this.log.info(`After filtering: ${devices.length} devices`);
+    devices.forEach((d) => this.log.debug(`  - ${d.name} (${d.id}): type=${d.dev_type}`));
 
     const cachedDeviceIds = [...this.accessories.keys()];
     const availableDeviceIds = devices.map((d) => this.generateUUID(d.id));
@@ -314,6 +319,7 @@ export class TuyaWebPlatform implements DynamicPlatformPlugin {
 
     // loop over the discovered devices and register each one if it has not already been registered
     for (const device of devices) {
+      this.log.debug(`Adding accessory for device: ${device.name} (${device.id})`);
       this.addAccessory(device);
     }
 
