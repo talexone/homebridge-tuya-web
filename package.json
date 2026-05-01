@@ -1,6 +1,6 @@
 {
   "displayName": "TuyaWebPlatform",
-  "name": "@milo526/homebridge-tuya-web",
+  "name": "@talexone/homebridge-tuya-web",
   "version": "1.1.5",
   "description": "Homebridge plugin for use with Tuya devices (uses Home Assistant Tuya Web API)",
   "main": "dist/src/index.js",
@@ -22,7 +22,7 @@
     "tuyawebplatform",
     "tuyaweb"
   ],
-  "author": "Milo Cesar <milocesar1@gmail.com>",
+  "author": "talexone <talexone@gmail.com>",
   "license": "MIT",
   "publishConfig": {
     "access": "public"
@@ -33,10 +33,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/milo526/homebridge-tuya-web"
+    "url": "https://github.com/talexone/homebridge-tuya-web"
   },
   "bugs": {
-    "url": "https://github.com/milo526/homebridge-tuya-web/issues"
+    "url": "https://github.com/talexone/homebridge-tuya-web/issues"
   },
   "dependencies": {
     "axios": "^1.5.1",
