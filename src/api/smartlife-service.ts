@@ -108,7 +108,6 @@ export class SmartLifeWebApi {
       const homes = await this.client.listHomes();
       this.log?.info(`SmartLife: Found ${homes.length} home(s)`);
       const allDevices: TuyaDevice[] = [];
-      const productCategories = new Map<string, string>();
 
       for (const home of homes) {
         const homeData = home as Record<string, unknown>;
@@ -130,30 +129,7 @@ export class SmartLifeWebApi {
           );
           this.log?.info(`SmartLife: Found ${devices.length} device(s) in home ${homeId}`);
           
-          // Enrich devices with category from product specs
-          for (const device of devices) {
-            const dev = device as Record<string, unknown>;
-            const productId = dev.productId as string;
-            
-            if (productId && !productCategories.has(productId)) {
-              try {
-                const productSpec = await this.client.getProductSpec(productId) as Record<string, unknown>;
-                const category = productSpec?.category as string;
-                if (category) {
-                  productCategories.set(productId, category);
-                  this.log?.debug(`SmartLife: Product ${productId} has category: ${category}`);
-                }
-              } catch (error) {
-                this.log?.debug(`Could not get product spec for ${productId}:`, error);
-              }
-            }
-            
-            // Add category to device
-            if (productId && productCategories.has(productId)) {
-              dev.category = productCategories.get(productId);
-            }
-          }
-          
+          // listHomeDevices() already enriches devices with category via getProductRefMap()
           const tuyaDevices = this.convertSmartLifeDevicesToTuya(devices);
           allDevices.push(...tuyaDevices);
         } catch (error) {

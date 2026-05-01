@@ -39,6 +39,9 @@ import {
   LoginTokenResponse,
   LoginResponse,
   Logger,
+  ProductRef,
+  ProductStandardConfig,
+  ProductSchemaItem,
 } from "./smartlife-types";
 
 /**
@@ -97,6 +100,7 @@ export class SmartLifeClient {
   private loginPromise?: Promise<void>;
   private lastNonRetryableAuthError?: SmartLifeApiError;
   private lastNonRetryableAuthErrorAtMs = 0;
+  private productRefsByHome: Map<string, Map<string, ProductRef>> = new Map();
 
   constructor(config: SmartLifeClientConfig, logger: Logger) {
     this.username = config.username;
@@ -603,7 +607,10 @@ export class SmartLifeClient {
   /**
    * List all devices in a home
    */
-  public async listHomeDevices(homeId: string | number): Promise<unknown[]> {
+  public async listHomeDevices(
+    homeId: string | number,
+    includeProductRefs: boolean = true,
+  ): Promise<unknown[]> {
     const devicesResponse = await this.request({
       action: "m.life.my.group.device.list",
       version: "2.2",
@@ -622,9 +629,159 @@ export class SmartLifeClient {
       return [];
     }
 
-    return devicesResponse.filter(
-      (item): item is object => typeof item === "object" && item !== null,
-    );
+    const homeIdStr = String(homeId);
+    let productRefMap = this.productRefsByHome.get(homeIdStr) ?? new Map<string, ProductRef>();
+
+    // Fetch product references to get category information
+    if (includeProductRefs || productRefMap.size === 0) {
+      try {
+        productRefMap = await this.getProductRefMap(homeId);
+        this.productRefsByHome.set(homeIdStr, productRefMap);
+        this.debug(
+          "Fetched %d product references for home %s",
+          productRefMap.size,
+          homeId,
+        );
+      } catch (error) {
+        this.debug(
+          "Product references fetch failed for home %s: %s",
+          homeId,
+          toErrorMessage(error),
+        );
+      }
+    }
+
+    // Enrich devices with product reference data (including category)
+    return devicesResponse
+      .filter((item): item is object => typeof item === "object" && item !== null)
+      .map((device: any) => {
+        const productId = typeof device.productId === "string" ? device.productId : undefined;
+        const ref = productId ? productRefMap.get(productId) : undefined;
+        const refConfig = ref?.standardConfig;
+
+        return {
+          ...device,
+          homeId,
+          category: device.category ?? ref?.category,
+          categoryCode: device.categoryCode ?? ref?.categoryCode,
+          productStandardConfig: device.productStandardConfig ?? refConfig,
+        };
+      });
+  }
+
+  /**
+   * Get product reference map for a home
+   * This provides category information and DP schemas for devices
+   */
+  private async getProductRefMap(
+    homeId: string | number,
+  ): Promise<Map<string, ProductRef>> {
+    const response = await this.request({
+      action: "m.life.device.ref.info.my.list",
+      version: "7.2",
+      requiresSid: true,
+      data: {
+        gid: homeId,
+        zigbeeGroup: true,
+      },
+    });
+
+    const result = new Map<string, ProductRef>();
+
+    if (!Array.isArray(response)) {
+      return result;
+    }
+
+    for (const item of response) {
+      if (typeof item !== "object" || item === null) {
+        continue;
+      }
+
+      const ref = this.normalizeProductRef(item as any);
+      if (ref?.productId) {
+        result.set(ref.productId, ref);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Normalize product reference data
+   */
+  private normalizeProductRef(raw: any): ProductRef | undefined {
+    const productId =
+      typeof raw.id === "string" && raw.id.length > 0
+        ? raw.id
+        : typeof raw.productId === "string" && raw.productId.length > 0
+          ? raw.productId
+          : undefined;
+
+    if (!productId) {
+      return undefined;
+    }
+
+    const schemaText = raw.schemaInfo?.schema;
+    let parsedSchema: ProductSchemaItem[] = [];
+
+    if (typeof schemaText === "string" && schemaText.length > 0) {
+      try {
+        const value = JSON.parse(schemaText);
+        if (Array.isArray(value)) {
+          parsedSchema = value.filter(
+            (item): item is ProductSchemaItem =>
+              typeof item === "object" && item !== null,
+          );
+        }
+      } catch {
+        parsedSchema = [];
+      }
+    }
+
+    const functionSchemaList: Array<{
+      standardCode: string;
+      relationDpIdMaps: { dpId: string };
+    }> = [];
+    const statusSchemaList: Array<{
+      dpCode: string;
+      relationDpIdMaps: { dpId: string };
+    }> = [];
+
+    for (const schema of parsedSchema) {
+      const code =
+        typeof schema.code === "string" && schema.code.length > 0
+          ? schema.code
+          : undefined;
+      const idValue =
+        schema.id === undefined || schema.id === null
+          ? undefined
+          : String(schema.id);
+
+      if (!code || !idValue) {
+        continue;
+      }
+
+      const relationDpIdMaps = { dpId: idValue };
+      statusSchemaList.push({ dpCode: code, relationDpIdMaps });
+
+      const mode = typeof schema.mode === "string" ? schema.mode : "";
+      if (mode.includes("w")) {
+        functionSchemaList.push({ standardCode: code, relationDpIdMaps });
+      }
+    }
+
+    const standardConfig: ProductStandardConfig = {
+      productId,
+      category: raw.category,
+      functionSchemaList,
+      statusSchemaList,
+    };
+
+    return {
+      ...raw,
+      productId,
+      standardConfig,
+    };
   }
 
   /**

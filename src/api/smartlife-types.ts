@@ -130,6 +130,47 @@ export interface SmartLifeHome {
 }
 
 /**
+ * Product reference schema item
+ */
+export interface ProductSchemaItem {
+  id?: number | string;
+  code?: string;
+  mode?: string;
+  type?: string;
+  property?: unknown;
+}
+
+/**
+ * Product reference standard config
+ */
+export interface ProductStandardConfig {
+  productId: string;
+  category?: string;
+  functionSchemaList: Array<{
+    standardCode: string;
+    relationDpIdMaps: { dpId: string };
+  }>;
+  statusSchemaList: Array<{
+    dpCode: string;
+    relationDpIdMaps: { dpId: string };
+  }>;
+}
+
+/**
+ * Product reference from API
+ */
+export interface ProductRef {
+  id?: string;
+  productId?: string;
+  category?: string;
+  categoryCode?: string;
+  schemaInfo?: {
+    schema?: string;
+  };
+  standardConfig?: ProductStandardConfig;
+}
+
+/**
  * Logger interface
  */
 export interface Logger {
