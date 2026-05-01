@@ -1,4 +1,5 @@
-import packageJson from "../package.json";
+// Use require() to load package.json at runtime from the correct location
+const packageJson = require("../../package.json");
 
 /**
  * This is the name of the platform that users will use to register the plugin in the Homebridge config.json
