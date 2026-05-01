@@ -604,14 +604,32 @@ export class SmartLifeClient {
    * List all devices in a home
    */
   public async listHomeDevices(homeId: string | number): Promise<unknown[]> {
-    const devicesResponse = await this.request({
-      action: "m.life.my.group.device.list",
-      version: "2.2",
+    // Try the newer API that includes category information
+    let devicesResponse = await this.request({
+      action: "tuya.m.my.group.device.list",
+      version: "1.0",
       requiresSid: true,
       data: {
-        gid: homeId,
+        group_id: homeId,
       },
     });
+
+    if (!Array.isArray(devicesResponse)) {
+      this.debug(
+        "Unexpected devices payload for home %s from tuya.m.my.group.device.list: %j",
+        homeId,
+        devicesResponse,
+      );
+      // Fallback to old API
+      devicesResponse = await this.request({
+        action: "m.life.my.group.device.list",
+        version: "2.2",
+        requiresSid: true,
+        data: {
+          gid: homeId,
+        },
+      });
+    }
 
     if (!Array.isArray(devicesResponse)) {
       this.debug(
@@ -625,6 +643,20 @@ export class SmartLifeClient {
     return devicesResponse.filter(
       (item): item is object => typeof item === "object" && item !== null,
     );
+  }
+
+  /**
+   * Get product specifications including category
+   */
+  public async getProductSpec(productId: string): Promise<unknown> {
+    return this.request({
+      action: "tuya.m.product.info.get",
+      version: "1.0",
+      requiresSid: true,
+      data: {
+        product_id: productId,
+      },
+    });
   }
 
   /**
