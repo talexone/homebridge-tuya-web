@@ -280,7 +280,7 @@
       ]
     },
     "options.countryCode",
-    "options.platform",
+    "options.region",
     {
       "type": "fieldset",
       "title": "Device Settings",
