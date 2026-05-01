@@ -22,7 +22,7 @@ import { TuyaDeviceDefaults, TuyaWebConfig } from "./config";
 import { AuthenticationError } from "./errors";
 import { DeviceList } from "./helpers/DeviceList";
 import { TuyaDevice, TuyaDeviceType, TuyaDeviceTypes } from "./api/response";
-import { TuyaWebApi } from "./api/service";
+import { SmartLifeWebApi } from "./api/smartlife-service";
 import { TuyaPlatforms } from "./api/platform";
 import { GarageDoorAccessory } from "./accessories/GarageDoorAccessory";
 import { TemperatureSensorAccessory } from "./accessories/TemperatureSensorAccessory";
@@ -54,7 +54,7 @@ export class TuyaWebPlatform implements DynamicPlatformPlugin {
   // Cloud polling interval in seconds
   private readonly pollingInterval?: number;
 
-  public readonly tuyaWebApi!: TuyaWebApi;
+  public readonly tuyaWebApi!: SmartLifeWebApi;
 
   private failedToInitAccessories = new Map<TuyaDeviceType, string[]>();
 
@@ -82,26 +82,17 @@ export class TuyaWebPlatform implements DynamicPlatformPlugin {
       return;
     }
 
-    if (
-      options.platform !== undefined &&
-      !TuyaPlatforms.includes(options.platform)
-    ) {
-      this.log.error(
-        "Invalid platform provided, received %s but must be one of %s",
-        options.platform,
-        TuyaPlatforms,
-      );
-    }
-
     // Set cloud polling interval
     this.pollingInterval = config.options.pollingInterval;
 
-    // Create Tuya Web API instance
-    this.tuyaWebApi = new TuyaWebApi(
-      options.username,
-      options.password,
-      options.countryCode,
-      options.platform,
+    // Create SmartLife Web API instance
+    this.tuyaWebApi = new SmartLifeWebApi(
+      {
+        username: options.username,
+        password: options.password,
+        countryCode: options.countryCode,
+        region: options.region as "us" | "eu" | "in" | "auto" | undefined,
+      },
       this.log,
     );
 

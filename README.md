@@ -2,6 +2,18 @@
 
 # Tuya Web
 
+## ⚠️ IMPORTANT - Version 2.0.0
+
+**Cette version utilise la nouvelle API SmartLife et contient des changements majeurs !**
+
+- ✅ Support **Smart Life** uniquement
+- ❌ Tuya Smart et Jinvoo Smart ne sont plus supportés
+- 🔄 Migration requise - Voir [MIGRATION.md](MIGRATION.md) pour les détails
+
+**Si vous utilisez Tuya Smart ou Jinvoo Smart**, restez sur la version 1.x ou migrez vos dispositifs vers Smart Life.
+
+---
+
 [![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
 [![certified-by-hoobs](https://badgen.net/badge/hoobs/certified/yellow)](https://plugins.hoobs.org/plugin/@milo526/homebridge-tuya-web)
 
@@ -19,11 +31,23 @@
 
 ## Overview
 
-Hoobs and Homebridge plugin for Tuya devices using a cloud Tuya Web Api.
+Hoobs and Homebridge plugin for **Smart Life** devices using the SmartLife Cloud API.
 
-This plugin is based on the Home Assistant Tuya integration that implements a special Tuya Home Assistant API.
+**Version 2.0.0+** uses the modern SmartLife Cloud API with improved security and reliability.
 
-See [Home Assistant Tuya integration](https://www.home-assistant.io/components/tuya/) and [Tuyaha python library](https://github.com/PaulAnnekov/tuyaha).
+### What's New in 2.0.0
+
+- ✅ Modern SmartLife Cloud API with RSA encryption
+- ✅ Automatic session management and re-authentication
+- ✅ Improved error handling and retry logic
+- ✅ Support for multiple regions (US, EU, IN)
+- ⚠️ **BreakinSmart Life Wi-Fi enabled devices from within HomeKit enabled iOS Apps.
+- Uses SmartLife Cloud API with modern authentication and encryption.
+- Automatic session management with retry logic for improved reliability.
+- Device State Caching. State of devices is cached in memory for fast response.
+- Support for multiple cloud regions (US, Europe, India).
+
+**Note**: You need a stable internet connection and a Smart Life account to use this plugin
 
 ## Features
 

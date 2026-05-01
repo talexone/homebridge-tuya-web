@@ -163,6 +163,7 @@ export abstract class BaseAccessory {
       this.service = homebridgeAccessory.addService(
         this.serviceType,
         this.deviceConfig.name,
+        this.deviceConfig.id,
       );
     }
 
@@ -312,7 +313,7 @@ export abstract class BaseAccessory {
       this.debug("Set device state request cache");
       this.cache.set(data);
 
-      if (!TuyaBoolean(data.online)) {
+      if (!TuyaBoolean(data.online as boolean | undefined)) {
         return promise.reject(new DeviceOfflineError());
       }
 

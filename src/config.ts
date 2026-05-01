@@ -24,7 +24,7 @@ interface Config {
     username?: string;
     password?: string;
     countryCode?: string;
-    platform?: TuyaPlatform;
+    region?: "us" | "eu" | "in" | "auto";
     pollingInterval?: number;
   };
   defaults?: Partial<TuyaDeviceDefaults>[];

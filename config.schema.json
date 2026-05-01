@@ -35,25 +35,30 @@
             "description": "Your account country code, e.g. 1 for USA, 86 for China, 44 for UK.",
             "required": true
           },
-          "platform": {
-            "title": "Platform",
+          "region": {
+            "title": "Region",
             "type": "string",
-            "default": "form",
+            "description": "SmartLife cloud region. Auto tries all regions.",
+            "default": "auto",
             "oneOf": [
               {
-                "title": "Tuya Smart",
-                "enum": ["tuya"]
+                "title": "Auto (try all)",
+                "enum": ["auto"]
               },
               {
-                "title": "Smart Life",
-                "enum": ["smart_life"]
+                "title": "United States",
+                "enum": ["us"]
               },
               {
-                "title": "Jinvoo Smart",
-                "enum": ["jinvoo_smart"]
+                "title": "Europe",
+                "enum": ["eu"]
+              },
+              {
+                "title": "India",
+                "enum": ["in"]
               }
             ],
-            "required": true
+            "required": false
           },
           "pollingInterval": {
             "title": "Polling Interval",
