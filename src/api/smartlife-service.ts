@@ -106,6 +106,7 @@ export class SmartLifeWebApi {
   private async performDiscovery(): Promise<TuyaDevice[] | undefined> {
     try {
       const homes = await this.client.listHomes();
+      this.log?.info(`SmartLife: Found ${homes.length} home(s)`);
       const allDevices: TuyaDevice[] = [];
 
       for (const home of homes) {
@@ -117,13 +118,16 @@ export class SmartLifeWebApi {
           homeData.id;
 
         if (!homeId) {
+          this.log?.warn(`SmartLife: Home without ID found, skipping:`, home);
           continue;
         }
 
         try {
+          this.log?.debug(`SmartLife: Fetching devices for home ${homeId}...`);
           const devices = await this.client.listHomeDevices(
             homeId as string | number,
           );
+          this.log?.info(`SmartLife: Found ${devices.length} device(s) in home ${homeId}`);
           const tuyaDevices = this.convertSmartLifeDevicesToTuya(devices);
           allDevices.push(...tuyaDevices);
         } catch (error) {
@@ -134,6 +138,7 @@ export class SmartLifeWebApi {
         }
       }
 
+      this.log?.info(`SmartLife: Total devices discovered: ${allDevices.length}`);
       this.devicesCache = allDevices;
       this.lastDiscoveryTime = Date.now();
       return allDevices;

@@ -107,9 +107,11 @@ export class TuyaWebPlatform implements DynamicPlatformPlugin {
 
   private async postLaunchSetup(): Promise<void> {
     try {
+      this.log.info("Starting SmartLife device discovery...");
       await this.tuyaWebApi.getOrRefreshToken();
       // run the method to discover / register your devices as accessories
       await this.discoverDevices();
+      this.log.info("Device discovery completed");
 
       if (this.pollingInterval) {
         //Tuya will probably still complain if we fetch a new request on the exact second.
