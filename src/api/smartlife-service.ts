@@ -223,7 +223,10 @@ export class SmartLifeWebApi {
         }
         
         // Extract data points
-        const dps = (dev.dps as Record<string, unknown>) || {};
+        const dataPointInfo = dev.dataPointInfo as Record<string, unknown> | undefined;
+        const dps = (dataPointInfo?.dps as Record<string, unknown>) || 
+                    (dev.dps as Record<string, unknown>) || 
+                    {};
         const state = Object.keys(dps).length > 0 ? dps : undefined;
 
         const category = dev.category as string;
@@ -236,7 +239,7 @@ export class SmartLifeWebApi {
           dev_type: devType,
           ha_type: haType,
           data: state || {},
-          online: (dev.online ?? true) as boolean,
+          online: (dev.cloudOnline ?? dev.online ?? true) as boolean,
           icon: (dev.iconUrl || "") as string,
         } as TuyaDevice;
 
@@ -254,19 +257,30 @@ export class SmartLifeWebApi {
     if (!category) return "scene";
     
     const categoryMap: Record<string, string> = {
+      // Outlets and switches
       "cz": "outlet",
       "kg": "switch",
       "pc": "outlet",
+      // Lights and dimmers
       "tdq": "light",
       "dj": "light",
       "dd": "light",
       "xdd": "dimmer",
+      // Fans
       "fsd": "fan",
       "fs": "fan",
+      // Covers (curtains, blinds, shutters)
       "cl": "cover",
       "jy": "cover",
+      "clkg": "cover",  // Curtain switch
+      // Climate
       "wnykq": "climate",
+      // Sensors
       "wsdcg": "sensor",
+      // Unsupported categories (filtered as "scene"):
+      // "wxkg" - Wireless switch/button (scene trigger, not controllable)
+      // "wg2" - Gateway/hub (not controllable)
+      // "qt" - Motion/radar sensor (would need MotionSensor accessory type)
     };
 
     return categoryMap[category] || "scene";
@@ -279,18 +293,25 @@ export class SmartLifeWebApi {
     if (!category) return "scene";
     
     const haTypeMap: Record<string, string> = {
+      // Outlets and switches
       "cz": "outlet",
       "kg": "switch",
       "pc": "outlet",
+      // Lights
       "tdq": "light",
       "dj": "light",
       "dd": "light",
       "xdd": "light",
+      // Fans
       "fsd": "fan",
       "fs": "fan",
+      // Covers
       "cl": "cover",
       "jy": "cover",
+      "clkg": "cover",  // Curtain switch
+      // Climate
       "wnykq": "climate",
+      // Sensors
       "wsdcg": "sensor",
     };
 
